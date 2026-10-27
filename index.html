@@ -306,11 +306,16 @@
   const nice = s => s ? s.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '—';
   let chartSrc = null;
 
+  const debug = location.hash === '#debug';
+  const raw = [];
   async function getJSON(url) {
     const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    const text = await r.text();
+    raw.push(url + '\n-> HTTP ' + r.status + '\n' + text.slice(0, 1500));
     if (!r.ok) throw new Error(url + ' -> HTTP ' + r.status);
-    return r.json();
+    return JSON.parse(text);
   }
+  const hasData = d => !!d && [d.price, d.mcap, d.vol, d.liq].some(v => num(v) != null);
 
   async function fromDexScreener() {
     let pairs = [];
@@ -367,7 +372,7 @@
     $('s-buys').textContent = count(d.buys);
     $('s-sells').textContent = count(d.sells);
     $('s-dex').textContent = nice(d.dex);
-    $('s-updated').textContent = 'Updated ' + new Date().toLocaleTimeString() + ' from ' + d.source + ', refreshes every minute';
+    if (hasData(d)) $('s-updated').textContent = 'Updated ' + new Date().toLocaleTimeString() + ' from ' + d.source + ', refreshes every minute';
     if (d.chart && d.chart !== chartSrc) {
       chartSrc = d.chart;
       $('chart').innerHTML = '<iframe title="$GME live price chart" src="' + d.chart + '" allow="clipboard-write"></iframe>';
@@ -377,12 +382,31 @@
   }
 
   async function loadMarket() {
+    raw.length = 0;
     let d = null;
-    try { d = await fromDexScreener(); } catch (e) { console.warn(e); }
-    if (!d) { try { d = await fromGeckoTerminal(); } catch (e) { console.warn(e); } }
-    if (d) { render(d); return; }
-    $('s-updated').textContent = 'No market data found for this coin yet. DexScreener and GeckoTerminal list a coin once it has trading activity they’ve indexed.';
-    if (!chartSrc) $('chart-msg').textContent = 'Chart not available yet. Use the DexScreener link below.';
+    try { d = await fromDexScreener(); } catch (e) { console.warn(e); raw.push('DexScreener error: ' + e.message); }
+    if (!hasData(d)) {
+      let g = null;
+      try { g = await fromGeckoTerminal(); } catch (e) { console.warn(e); raw.push('GeckoTerminal error: ' + e.message); }
+      if (hasData(g)) d = g;
+      else if (!d) d = g;
+    }
+    if (hasData(d)) render(d);
+    else {
+      $('s-updated').textContent = 'Checked ' + new Date().toLocaleTimeString() + ': DexScreener and GeckoTerminal have no price data for this coin right now. Numbers appear here once there is trading activity they track.';
+      if (d && d.chart && d.chart !== chartSrc) render(d);
+      else if (!chartSrc) $('chart-msg').textContent = 'Chart not available yet. Use the DexScreener link below.';
+    }
+    if (debug) {
+      let pre = document.getElementById('debug-out');
+      if (!pre) {
+        pre = document.createElement('pre');
+        pre.id = 'debug-out';
+        pre.style.cssText = 'white-space:pre-wrap;word-break:break-all;font-size:12px;margin-top:1rem;padding:1rem;border-radius:12px;background:rgba(0,0,0,.35);color:#fff;max-height:30rem;overflow:auto';
+        document.querySelector('#market .wrap').appendChild(pre);
+      }
+      pre.textContent = raw.join('\n\n----------\n\n') || '(no requests recorded)';
+    }
   }
   loadMarket();
   setInterval(loadMarket, 60000);
