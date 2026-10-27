@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gooning Made Easy — lessons from Chart-sensei</title>
+<meta name="description" content="Gooning Made Easy: a meme coin on pump.fun disguised as an anime course about staring at charts, taught by Chart-sensei.">
+<meta property="og:title" content="Gooning Made Easy">
+<meta property="og:description" content="Lessons in staring at charts from Chart-sensei. A meme coin on pump.fun.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&family=Yusei+Magic&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #FFF6FA;
+    --card: #FFFFFF;
+    --ink: #2A1E3D;
+    --muted: #6B5C80;
+    --pink: #FF7AB6;
+    --pink-soft: #FFD6EA;
+    --lav: #B7A4FF;
+    --sky: #8FD3FF;
+    --line: #F0D9E6;
+    --hero-bg: #FFE3F0;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #1A1428;
+      --card: #241B36;
+      --ink: #F7EEFF;
+      --muted: #B9A9CF;
+      --pink: #FF8CC2;
+      --pink-soft: #4A2A45;
+      --lav: #9C88F5;
+      --sky: #5BB6E8;
+      --line: #3A2C50;
+      --hero-bg: #2A1D3D;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Segoe UI", system-ui, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; border-radius: 6px; }
+  .wrap { max-width: 64rem; margin: 0 auto; padding: 0 1.5rem; }
+  .hand { font-family: "Yusei Magic", "Comic Sans MS", cursive; color: var(--pink); }
+
+  /* Hero */
+  .hero {
+    position: relative; overflow: hidden;
+    background:
+      repeating-conic-gradient(from 0deg at 75% 55%, transparent 0deg 6deg, rgba(255,122,182,.10) 6deg 9deg),
+      var(--hero-bg);
+    padding: 1.75rem 0 4.5rem;
+  }
+  .nav { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 3rem; position: relative; z-index: 2; }
+  .logo { font-weight: 800; font-size: 1.2rem; text-decoration: none; }
+  .logo span { color: var(--pink); }
+  .nav-links { display: flex; gap: 1.25rem; font-size: 1rem; font-weight: 700; }
+  .nav-links a { text-decoration: none; }
+  .nav-links a:hover { color: var(--pink); }
+  .hero-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 2rem; align-items: center; position: relative; z-index: 2; }
+  .kicker { font-size: 1.4rem; margin-bottom: .5rem; }
+  .hero h1 { font-size: clamp(2.8rem, 7.5vw, 5.4rem); font-weight: 800; line-height: .98; letter-spacing: -0.02em; }
+  .hero h1 .outline { color: var(--paper); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 5px 5px 0 var(--pink); }
+  .lede { font-size: 1.2rem; margin: 1.4rem 0 2rem; max-width: 30rem; color: var(--muted); }
+  .cta-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .btn { display: inline-block; font: inherit; font-weight: 800; font-size: 1.1rem; padding: .85rem 1.6rem; border-radius: 999px; text-decoration: none; cursor: pointer; border: 3px solid var(--ink); }
+  .btn-buy { background: var(--pink); color: #fff; box-shadow: 5px 5px 0 var(--ink); transition: transform .1s, box-shadow .1s; }
+  .btn-buy:hover { transform: translate(2px,2px); box-shadow: 3px 3px 0 var(--ink); }
+  .btn-ghost { background: var(--card); color: var(--ink); }
+
+  .sensei-stage { position: relative; display: flex; justify-content: center; }
+  .sensei-stage svg { width: min(22rem, 100%); height: auto; filter: drop-shadow(8px 8px 0 rgba(42,30,61,.18)); }
+  .bubble {
+    position: absolute; top: 0; left: -0.5rem; max-width: 12rem;
+    background: var(--card); border: 3px solid var(--ink); border-radius: 22px;
+    padding: .7rem 1rem; font-weight: 700; font-size: 1rem; line-height: 1.35;
+  }
+  .bubble::after {
+    content: ""; position: absolute; bottom: -14px; right: 2.2rem;
+    width: 20px; height: 20px; background: var(--card);
+    border-right: 3px solid var(--ink); border-bottom: 3px solid var(--ink);
+    transform: rotate(45deg);
+  }
+  .name-tag { position: absolute; bottom: .5rem; right: 0; background: var(--ink); color: var(--paper); font-weight: 800; padding: .35rem .9rem; border-radius: 8px; transform: rotate(-3deg); font-size: .95rem; }
+
+  /* Petals */
+  .petals { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+  .petal { position: absolute; top: -2rem; width: 14px; height: 10px; background: var(--pink); border-radius: 14px 0 14px 0; opacity: .7; animation: fall linear infinite; }
+  @keyframes fall {
+    0% { transform: translate(0,0) rotate(0deg); }
+    100% { transform: translate(-120px, 110vh) rotate(540deg); }
+  }
+  @media (prefers-reduced-motion: reduce) { .petal { display: none; } html { scroll-behavior: auto; } }
+
+  /* Contract */
+  .ca-band { background: var(--ink); color: var(--paper); padding: 1.2rem 0; }
+  .ca-inner { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+  .ca-label { font-weight: 800; }
+  .ca-code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .92rem; background: rgba(255,255,255,.1); padding: .45rem .8rem; border-radius: 8px; overflow-x: auto; max-width: 100%; white-space: nowrap; }
+  .copy-btn { font: inherit; font-weight: 800; background: var(--pink); color: #fff; border: 0; border-radius: 999px; padding: .45rem 1.1rem; cursor: pointer; }
+  @media (prefers-color-scheme: dark) { .ca-band { background: #0F0B18; color: #F7EEFF; } }
+
+  section { padding: 5rem 0; }
+  h2 { font-size: clamp(2.1rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.05; letter-spacing: -0.01em; margin-bottom: .8rem; }
+  .intro { color: var(--muted); max-width: 36rem; margin-bottom: 2.5rem; }
+
+  /* Episodes */
+  .episodes { list-style: none; display: grid; gap: 1rem; }
+  .ep { display: grid; grid-template-columns: 5.5rem 1fr; background: var(--card); border: 3px solid var(--ink); border-radius: 16px; overflow: hidden; }
+  .ep-num { background: var(--lav); color: #2A1E3D; display: grid; place-items: center; font-weight: 800; font-size: .85rem; text-align: center; line-height: 1.1; padding: .5rem; border-right: 3px solid var(--ink); }
+  .ep-num b { display: block; font-size: 2.2rem; }
+  .ep:nth-child(3n+2) .ep-num { background: var(--sky); }
+  .ep:nth-child(3n) .ep-num { background: var(--pink-soft); }
+  @media (prefers-color-scheme: dark) { .ep:nth-child(3n) .ep-num { background: #FFB3D5; } }
+  .ep-body { padding: 1.1rem 1.4rem; }
+  .ep h3 { font-size: 1.3rem; font-weight: 800; margin-bottom: .2rem; }
+  .ep p { color: var(--muted); max-width: 40rem; }
+  .ep .hand { display: block; margin-top: .3rem; font-size: 1.05rem; }
+
+  /* Reviews */
+  .reviews { background: var(--hero-bg); }
+  .review-list { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
+  .review { background: var(--card); border: 3px solid var(--ink); border-radius: 22px; padding: 1.4rem; position: relative; }
+  .review blockquote { font-weight: 700; font-size: 1.1rem; line-height: 1.45; margin-bottom: .9rem; }
+  .review cite { font-style: normal; color: var(--muted); font-size: .95rem; }
+  .hearts { color: var(--pink); margin-bottom: .4rem; letter-spacing: .1em; }
+
+  /* Enroll */
+  .enroll { text-align: center; }
+  .enroll .hand { font-size: 1.4rem; margin-bottom: .4rem; }
+  .steps { list-style: none; display: grid; grid-template-columns: repeat(3,1fr); gap: 1.2rem; text-align: left; margin: 2.2rem 0 2.5rem; }
+  .steps li { background: var(--card); border: 3px dashed var(--pink); border-radius: 16px; padding: 1.2rem; }
+  .steps strong { display: block; font-size: 1.15rem; margin-bottom: .2rem; }
+  .steps span { color: var(--muted); font-size: 1rem; }
+  .enroll .btn-buy { font-size: 1.25rem; padding: 1rem 2.2rem; }
+  .socials { display: flex; justify-content: center; gap: 1.5rem; margin-top: 2rem; font-weight: 700; }
+  .socials a:hover { color: var(--pink); }
+
+  footer { border-top: 3px solid var(--ink); padding: 2.5rem 0 3rem; font-size: .95rem; color: var(--muted); }
+  footer strong { color: var(--ink); }
+  footer p + p { margin-top: .7rem; }
+
+  @media (max-width: 760px) {
+    .hero-grid, .review-list, .steps { grid-template-columns: 1fr; }
+    .sensei-stage { margin-top: 1.5rem; }
+    .bubble { left: 0; font-size: .95rem; }
+    .nav-links { display: none; }
+    .ep { grid-template-columns: 4.2rem 1fr; }
+    .ep-num b { font-size: 1.7rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="petals" aria-hidden="true" id="petals"></div>
+  <div class="wrap">
+    <nav class="nav" aria-label="Main">
+      <a class="logo" href="#">Gooning <span>Made Easy</span></a>
+      <div class="nav-links">
+        <a href="#episodes">Episodes</a>
+        <a href="#reviews">Reviews</a>
+        <a href="#enroll">Enroll</a>
+      </div>
+    </nav>
+    <div class="hero-grid">
+      <div>
+        <p class="kicker hand">Season 1 now streaming on pump.fun</p>
+        <h1>Gooning <span class="outline">Made Easy</span></h1>
+        <p class="lede">Chart-sensei teaches the ancient art of staring at charts until your eyes go dry. Seven episodes. Zero plot. Now a meme coin.</p>
+        <div class="cta-row">
+          <a class="btn btn-buy" href="https://pump.fun/coin/5YDuCbCHVqaNym6HWHViuWxqPLnjkPCueV9hUgzHpump" target="_blank" rel="noopener">Enroll on pump.fun</a>
+          <a class="btn btn-ghost" href="https://dexscreener.com/solana/5YDuCbCHVqaNym6HWHViuWxqPLnjkPCueV9hUgzHpump" target="_blank" rel="noopener">View chart</a>
+          <a class="btn btn-ghost" href="https://x.com/YOUR_HANDLE" target="_blank" rel="noopener">Follow on X</a>
+        </div>
+      </div>
+
+      <div class="sensei-stage">
+        <div class="bubble">Lesson one: never close the tab.</div>
+        <svg viewBox="0 0 320 380" role="img" aria-label="Chart-sensei, an anime-style instructor with glasses and a blazer, pointing at a rising chart">
+          <!-- backdrop -->
+          <circle cx="160" cy="205" r="140" fill="#FFFFFF" stroke="#2A1E3D" stroke-width="4"/>
+          <!-- mini chart -->
+          <g transform="translate(222,62)">
+            <rect x="0" y="0" width="86" height="64" rx="8" fill="#FFFFFF" stroke="#2A1E3D" stroke-width="3"/>
+            <polyline points="10,50 26,40 38,44 52,26 64,30 76,12" fill="none" stroke="#FF7AB6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </g>
+          <!-- hair back -->
+          <path d="M84,140 Q70,42 160,40 Q250,42 236,140 L250,318 Q205,300 190,258 L130,258 Q115,300 70,318 Z" fill="#4B3A8C" stroke="#2A1E3D" stroke-width="4" stroke-linejoin="round"/>
+          <!-- body / blazer -->
+          <path d="M66,380 Q72,268 160,244 Q248,268 254,380 Z" fill="#2E2A5C" stroke="#2A1E3D" stroke-width="4" stroke-linejoin="round"/>
+          <path d="M138,248 L160,296 L182,248 Z" fill="#FFFFFF" stroke="#2A1E3D" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M155,256 L165,256 L170,304 L160,318 L150,304 Z" fill="#FF7AB6" stroke="#2A1E3D" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M128,252 L150,330 L118,300 Z" fill="#3D3878" stroke="#2A1E3D" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M192,252 L170,330 L202,300 Z" fill="#3D3878" stroke="#2A1E3D" stroke-width="3" stroke-linejoin="round"/>
+          <!-- neck -->
+          <rect x="145" y="205" width="30" height="44" fill="#FFE1D2" stroke="#2A1E3D" stroke-width="4"/>
+          <!-- face -->
+          <path d="M100,132 Q100,70 160,70 Q220,70 220,132 Q220,184 186,210 Q160,228 134,210 Q100,184 100,132 Z" fill="#FFE8DC" stroke="#2A1E3D" stroke-width="4" stroke-linejoin="round"/>
+          <!-- blush -->
+          <ellipse cx="122" cy="174" rx="12" ry="6" fill="#FF9CC6" opacity=".55"/>
+          <ellipse cx="198" cy="174" rx="12" ry="6" fill="#FF9CC6" opacity=".55"/>
+          <!-- eyes -->
+          <g>
+            <ellipse cx="134" cy="150" rx="13" ry="17" fill="#FFFFFF" stroke="#2A1E3D" stroke-width="2.5"/>
+            <ellipse cx="135" cy="152" rx="10" ry="14" fill="#7B5CE0"/>
+            <ellipse cx="135" cy="154" rx="5" ry="8" fill="#2A1E3D"/>
+            <circle cx="131" cy="146" r="4" fill="#FFFFFF"/>
+            <path d="M119,140 Q134,128 149,138" fill="none" stroke="#2A1E3D" stroke-width="4" stroke-linecap="round"/>
+          </g>
+          <g>
+            <ellipse cx="186" cy="150" rx="13" ry="17" fill="#FFFFFF" stroke="#2A1E3D" stroke-width="2.5"/>
+            <ellipse cx="185" cy="152" rx="10" ry="14" fill="#7B5CE0"/>
+            <ellipse cx="185" cy="154" rx="5" ry="8" fill="#2A1E3D"/>
+            <circle cx="181" cy="146" r="4" fill="#FFFFFF"/>
+            <path d="M171,138 Q186,128 201,140" fill="none" stroke="#2A1E3D" stroke-width="4" stroke-linecap="round"/>
+          </g>
+          <!-- glasses -->
+          <rect x="114" y="130" width="40" height="40" rx="12" fill="none" stroke="#2A1E3D" stroke-width="3"/>
+          <rect x="166" y="130" width="40" height="40" rx="12" fill="none" stroke="#2A1E3D" stroke-width="3"/>
+          <line x1="154" y1="148" x2="166" y2="148" stroke="#2A1E3D" stroke-width="3"/>
+          <!-- mouth -->
+          <path d="M150,192 Q160,200 170,192" fill="none" stroke="#2A1E3D" stroke-width="3" stroke-linecap="round"/>
+          <!-- bangs -->
+          <path d="M96,138 Q96,56 160,54 Q224,56 224,138 Q212,106 198,98 L190,130 L176,94 L160,122 L144,94 L130,130 L122,98 Q108,106 96,138 Z" fill="#5A47A6" stroke="#2A1E3D" stroke-width="4" stroke-linejoin="round"/>
+          <!-- hair clip -->
+          <path d="M202,82 l6,-10 l6,10 l10,2 l-8,7 l2,11 l-10,-6 l-10,6 l2,-11 l-8,-7 Z" fill="#FF7AB6" stroke="#2A1E3D" stroke-width="2.5" stroke-linejoin="round"/>
+          <!-- pointer + hand -->
+          <line x1="240" y1="300" x2="268" y2="132" stroke="#2A1E3D" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="268" cy="132" r="5" fill="#FF7AB6" stroke="#2A1E3D" stroke-width="2"/>
+          <ellipse cx="238" cy="306" rx="13" ry="11" fill="#FFE8DC" stroke="#2A1E3D" stroke-width="3"/>
+        </svg>
+        <div class="name-tag">Chart-sensei</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="ca-band">
+  <div class="wrap ca-inner">
+    <span class="ca-label">Contract address</span>
+    <code class="ca-code" id="ca">5YDuCbCHVqaNym6HWHViuWxqPLnjkPCueV9hUgzHpump</code>
+    <button class="copy-btn" id="copyBtn" type="button">Copy</button>
+  </div>
+</div>
+
+<main>
+  <section id="episodes">
+    <div class="wrap">
+      <h2>Season 1 episode guide</h2>
+      <p class="intro">Seven episodes of Chart-sensei teaching her students one thing: how to never, ever look away from the screen.</p>
+      <ol class="episodes">
+        <li class="ep"><div class="ep-num">EP<b>1</b></div><div class="ep-body"><h3>The one-minute candle</h3><p>Sensei explains why every timeframe longer than one minute is for cowards. A student watches a single green candle for an entire lunch break.</p></div></li>
+        <li class="ep"><div class="ep-num">EP<b>2</b></div><div class="ep-body"><h3>The refresh technique</h3><p>F5, pull-to-refresh, and the forbidden third form: closing the tab and opening it again.</p></div></li>
+        <li class="ep"><div class="ep-num">EP<b>3</b></div><div class="ep-body"><h3>Zoom out no jutsu</h3><p>When the chart looks bad, make it smaller until it looks fine. A powerful technique with a terrible cost.</p><span class="hand">fan favorite episode ♡</span></div></li>
+        <li class="ep"><div class="ep-num">EP<b>4</b></div><div class="ep-body"><h3>Three monitors arc</h3><p>The students build battle stations. Nobody has a plan, but everyone has RGB.</p></div></li>
+        <li class="ep"><div class="ep-num">EP<b>5</b></div><div class="ep-body"><h3>Secrets of the Telegram</h3><p>Decoding the difference between “gm,” “gm gm,” and “gm 🙏,” and what each one means for morale.</p></div></li>
+        <li class="ep"><div class="ep-num">EP<b>6</b></div><div class="ep-body"><h3>Diamond hands awakening</h3><p>A 40% dip tests everyone’s resolve. One student tells their family they’re “doing research.”</p></div></li>
+        <li class="ep"><div class="ep-num">EP<b>7</b></div><div class="ep-body"><h3>Touching grass (filler)</h3><p>Sensei takes the class outside. Nobody has watched this episode.</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="reviews" class="reviews">
+    <div class="wrap">
+      <h2>What the class is saying</h2>
+      <p class="intro">Totally real reviews from totally real students. (They are not real.)</p>
+      <div class="review-list">
+        <figure class="review">
+          <div class="hearts" aria-label="5 out of 5">♥♥♥♥♥</div>
+          <blockquote>I used to check charts twice an hour. Sensei showed me I could just never stop.</blockquote>
+          <figcaption><cite>Derek, still in the Telegram</cite></figcaption>
+        </figure>
+        <figure class="review">
+          <div class="hearts" aria-label="5 out of 5">♥♥♥♥♥</div>
+          <blockquote>Episode 3 changed me. I zoomed out so far I can see my apartment from space.</blockquote>
+          <figcaption><cite>Priya, certified zoomer-outer</cite></figcaption>
+        </figure>
+        <figure class="review">
+          <div class="hearts" aria-label="4 out of 5">♥♥♥♥♡</div>
+          <blockquote>Docked a heart because episode 7 was outside and I couldn’t find it.</blockquote>
+          <figcaption><cite>Marcus, has not seen the sun</cite></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="enroll" class="enroll">
+    <div class="wrap">
+      <p class="hand">enrollment never closes ♡</p>
+      <h2>Join the class in three steps</h2>
+      <ol class="steps">
+        <li><strong>Get a Solana wallet</strong><span>Phantom, Solflare, or whatever your cousin set up for you.</span></li>
+        <li><strong>Add a little SOL</strong><span>Only what you’re happy to spend on a joke. Seriously.</span></li>
+        <li><strong>Buy on pump.fun</strong><span>Paste the contract address above and double-check it before you swap.</span></li>
+      </ol>
+      <a class="btn btn-buy" href="https://pump.fun/coin/5YDuCbCHVqaNym6HWHViuWxqPLnjkPCueV9hUgzHpump" target="_blank" rel="noopener">Enroll on pump.fun</a>
+      <div class="socials">
+        <a href="https://x.com/YOUR_HANDLE" target="_blank" rel="noopener">X</a>
+        <a href="https://dexscreener.com/solana/5YDuCbCHVqaNym6HWHViuWxqPLnjkPCueV9hUgzHpump" target="_blank" rel="noopener">DexScreener</a>
+        <a href="https://pump.fun/coin/5YDuCbCHVqaNym6HWHViuWxqPLnjkPCueV9hUgzHpump" target="_blank" rel="noopener">pump.fun</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><strong>Gooning Made Easy is a meme coin.</strong> It is not a real course or show, has no intrinsic value, and comes with no roadmap, utility, or promise of returns. Most meme coins go to zero.</p>
+    <p>Nothing on this site is financial advice. Only spend what you’re fine losing, and do your own research before buying any token.</p>
+  </div>
+</footer>
+
+<script>
+  // copy contract address
+  const btn = document.getElementById('copyBtn');
+  btn.addEventListener('click', async () => {
+    const el = document.getElementById('ca');
+    try {
+      await navigator.clipboard.writeText(el.textContent.trim());
+      btn.textContent = 'Copied ♡';
+    } catch (e) {
+      const r = document.createRange(); r.selectNodeContents(el);
+      const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      btn.textContent = 'Press Ctrl+C';
+    }
+    setTimeout(() => { btn.textContent = 'Copy'; }, 1800);
+  });
+
+  // sakura petals
+  const box = document.getElementById('petals');
+  for (let i = 0; i < 16; i++) {
+    const p = document.createElement('span');
+    p.className = 'petal';
+    p.style.left = (Math.random() * 110) + '%';
+    p.style.animationDuration = (9 + Math.random() * 9) + 's';
+    p.style.animationDelay = (-Math.random() * 18) + 's';
+    p.style.transform = 'scale(' + (0.6 + Math.random() * 0.8) + ')';
+    box.appendChild(p);
+  }
+</script>
+</body>
+</html>
