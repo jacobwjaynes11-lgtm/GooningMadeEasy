@@ -128,6 +128,7 @@
   .up { color: #3DDC84 !important; }
   .down { color: #FF6B6B !important; }
   .chart-frame { position: relative; width: 100%; height: 34rem; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); background: rgba(0,0,0,.25); }
+  .chart-msg { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 2rem; color: var(--muted); }
   .chart-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   .market-meta { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: .8rem; font-size: .88rem; color: var(--muted); }
   .market-meta a { color: var(--gold); font-weight: 700; text-decoration: none; }
@@ -194,7 +195,7 @@
     <div class="wrap">
       <div class="section-head">
         <h2>Live market</h2>
-        <p>Price, volume and market data update automatically from DexScreener.</p>
+        <p>Price, volume and market data update automatically from DexScreener and GeckoTerminal.</p>
       </div>
       <dl class="stats" aria-live="polite">
         <div class="stat"><dt>Price</dt><dd id="s-price">—<small id="s-change">&nbsp;</small></dd></div>
@@ -206,8 +207,8 @@
         <div class="stat"><dt>Exchange</dt><dd id="s-dex">—</dd></div>
         <div class="stat"><dt>Holders</dt><dd><a class="stat-link" href="https://solscan.io/token/5YDuCbCHVqaNym6HWHViuWxqPLnjkPCueV9hUgzHpump#holders" target="_blank" rel="noopener">View on Solscan</a></dd></div>
       </dl>
-      <div class="chart-frame">
-        <iframe title="GME live price chart from DexScreener" loading="lazy" src="https://dexscreener.com/solana/5YDuCbCHVqaNym6HWHViuWxqPLnjkPCueV9hUgzHpump?embed=1&amp;theme=dark&amp;trades=0&amp;info=0"></iframe>
+      <div class="chart-frame" id="chart">
+        <p class="chart-msg" id="chart-msg">Loading chart…</p>
       </div>
       <div class="market-meta">
         <span id="s-updated">Loading market data…</span>
@@ -288,48 +289,103 @@
     setTimeout(() => { btn.textContent = 'Copy address'; }, 1800);
   });
 
-  // Live market data from DexScreener's public API
+  // Live market data: tries DexScreener first, then GeckoTerminal
   const CA = '5YDuCbCHVqaNym6HWHViuWxqPLnjkPCueV9hUgzHpump';
   const $ = id => document.getElementById(id);
+  const num = v => (v == null || v === '' || isNaN(Number(v))) ? null : Number(v);
   const usd = (n, small) => {
-    if (n == null || isNaN(n)) return '—';
-    n = Number(n);
+    n = num(n);
+    if (n == null) return '—';
     if (small && n < 0.01) return '$' + n.toPrecision(3);
     if (n >= 1e9) return '$' + (n/1e9).toFixed(2) + 'B';
     if (n >= 1e6) return '$' + (n/1e6).toFixed(2) + 'M';
     if (n >= 1e3) return '$' + (n/1e3).toFixed(1) + 'K';
     return '$' + n.toLocaleString(undefined, { maximumFractionDigits: 2 });
   };
-  async function loadMarket() {
+  const count = n => (num(n) == null ? '—' : Number(n).toLocaleString());
+  const nice = s => s ? s.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '—';
+  let chartSrc = null;
+
+  async function getJSON(url) {
+    const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if (!r.ok) throw new Error(url + ' -> HTTP ' + r.status);
+    return r.json();
+  }
+
+  async function fromDexScreener() {
+    let pairs = [];
     try {
-      const res = await fetch('https://api.dexscreener.com/latest/dex/tokens/' + CA);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      const pairs = (data.pairs || []).filter(p => p.chainId === 'solana');
-      if (!pairs.length) { $('s-updated').textContent = 'No trading data yet.'; return; }
-      pairs.sort((a, b) => ((b.liquidity && b.liquidity.usd) || 0) - ((a.liquidity && a.liquidity.usd) || 0));
-      const p = pairs[0];
-      $('s-price').firstChild.nodeValue = usd(p.priceUsd, true);
-      const ch = p.priceChange && p.priceChange.h24;
-      const chEl = $('s-change');
-      if (ch != null) {
-        chEl.textContent = (ch > 0 ? '+' : '') + Number(ch).toFixed(2) + '% (24h)';
-        chEl.className = ch >= 0 ? 'up' : 'down';
-      }
-      $('s-mcap').textContent = usd(p.marketCap != null ? p.marketCap : p.fdv);
-      $('s-vol').textContent = usd(p.volume && p.volume.h24);
-      $('s-liq').textContent = usd(p.liquidity && p.liquidity.usd);
-      const t24 = (p.txns && p.txns.h24) || {};
-      $('s-buys').textContent = t24.buys != null ? t24.buys.toLocaleString() : '—';
-      $('s-sells').textContent = t24.sells != null ? t24.sells.toLocaleString() : '—';
-      $('s-dex').textContent = p.dexId ? p.dexId.charAt(0).toUpperCase() + p.dexId.slice(1) : '—';
-      $('s-updated').textContent = 'Updated ' + new Date().toLocaleTimeString() + ' · refreshes every 30 seconds';
-    } catch (e) {
-      $('s-updated').textContent = 'Market data is unavailable right now. Use the DexScreener link for live numbers.';
+      const a = await getJSON('https://api.dexscreener.com/tokens/v1/solana/' + CA);
+      if (Array.isArray(a)) pairs = a;
+    } catch (e) { console.warn(e); }
+    if (!pairs.length) {
+      try {
+        const b = await getJSON('https://api.dexscreener.com/latest/dex/tokens/' + CA);
+        pairs = (b.pairs || []).filter(p => p.chainId === 'solana');
+      } catch (e) { console.warn(e); }
+    }
+    if (!pairs.length) return null;
+    pairs.sort((a, b) => ((b.liquidity && b.liquidity.usd) || 0) - ((a.liquidity && a.liquidity.usd) || 0));
+    const p = pairs[0], t24 = (p.txns && p.txns.h24) || {};
+    return {
+      source: 'DexScreener',
+      price: p.priceUsd, change: p.priceChange && p.priceChange.h24,
+      mcap: p.marketCap != null ? p.marketCap : p.fdv,
+      vol: p.volume && p.volume.h24, liq: p.liquidity && p.liquidity.usd,
+      buys: t24.buys, sells: t24.sells, dex: p.dexId,
+      chart: 'https://dexscreener.com/solana/' + p.pairAddress + '?embed=1&theme=dark&trades=0&info=0'
+    };
+  }
+
+  async function fromGeckoTerminal() {
+    const tok = await getJSON('https://api.geckoterminal.com/api/v2/networks/solana/tokens/' + CA + '?include=top_pools');
+    const pools = tok.data && tok.data.relationships && tok.data.relationships.top_pools && tok.data.relationships.top_pools.data;
+    if (!pools || !pools.length) {
+      const a = tok.data.attributes;
+      return { source: 'GeckoTerminal', price: a.price_usd, mcap: a.market_cap_usd || a.fdv_usd, vol: a.volume_usd && a.volume_usd.h24, liq: a.total_reserve_in_usd };
+    }
+    const poolAddr = pools[0].id.replace(/^solana_/, '');
+    const pool = await getJSON('https://api.geckoterminal.com/api/v2/networks/solana/pools/' + poolAddr);
+    const a = pool.data.attributes, tx = (a.transactions && a.transactions.h24) || {};
+    const dex = pool.data.relationships && pool.data.relationships.dex && pool.data.relationships.dex.data && pool.data.relationships.dex.data.id;
+    return {
+      source: 'GeckoTerminal',
+      price: a.base_token_price_usd, change: a.price_change_percentage && a.price_change_percentage.h24,
+      mcap: a.market_cap_usd || a.fdv_usd, vol: a.volume_usd && a.volume_usd.h24, liq: a.reserve_in_usd,
+      buys: tx.buys, sells: tx.sells, dex: dex,
+      chart: 'https://www.geckoterminal.com/solana/pools/' + poolAddr + '?embed=1&info=0&swaps=0&grayscale=0&light_chart=0'
+    };
+  }
+
+  function render(d) {
+    $('s-price').firstChild.nodeValue = usd(d.price, true);
+    const ch = num(d.change), chEl = $('s-change');
+    if (ch != null) { chEl.textContent = (ch > 0 ? '+' : '') + ch.toFixed(2) + '% (24h)'; chEl.className = ch >= 0 ? 'up' : 'down'; }
+    $('s-mcap').textContent = usd(d.mcap);
+    $('s-vol').textContent = usd(d.vol);
+    $('s-liq').textContent = usd(d.liq);
+    $('s-buys').textContent = count(d.buys);
+    $('s-sells').textContent = count(d.sells);
+    $('s-dex').textContent = nice(d.dex);
+    $('s-updated').textContent = 'Updated ' + new Date().toLocaleTimeString() + ' from ' + d.source + ', refreshes every minute';
+    if (d.chart && d.chart !== chartSrc) {
+      chartSrc = d.chart;
+      $('chart').innerHTML = '<iframe title="$GME live price chart" src="' + d.chart + '" allow="clipboard-write"></iframe>';
+    } else if (!d.chart && !chartSrc) {
+      $('chart-msg').textContent = 'The chart will appear here once a trading pool is indexed.';
     }
   }
+
+  async function loadMarket() {
+    let d = null;
+    try { d = await fromDexScreener(); } catch (e) { console.warn(e); }
+    if (!d) { try { d = await fromGeckoTerminal(); } catch (e) { console.warn(e); } }
+    if (d) { render(d); return; }
+    $('s-updated').textContent = 'No market data found for this coin yet. DexScreener and GeckoTerminal list a coin once it has trading activity they’ve indexed.';
+    if (!chartSrc) $('chart-msg').textContent = 'Chart not available yet. Use the DexScreener link below.';
+  }
   loadMarket();
-  setInterval(loadMarket, 30000);
+  setInterval(loadMarket, 60000);
 </script>
 </body>
 </html>
